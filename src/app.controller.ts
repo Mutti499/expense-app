@@ -1,63 +1,38 @@
 import { Controller, Get , Post, Delete, Put, Param, Body, HttpCode, UploadedFile} from "@nestjs/common";
-import { reports, generateRandomId, ReportType, Report } from "./data";
-import { randomUUID } from "crypto";
-
+import { ReportType, Report } from "./data";
+import { AppService } from "./app.service";
 
 
 @Controller('reports')
 export class AppController {
 
+  constructor(private appService: AppService) {}
+
   @Get()
   getAllReports(): Report[] {
-    return reports;
+    return this.appService.getAllReports();
   }
 
   @Get(":param")
   getReportOrType(@Param('param') param: string) {
-    if (param === 'income' || param === 'outcome') {
-      return reports.filter(report => report.type === param);
-    } else {
-      const report = reports.find(report => param === report.id);
-      return report ? report : 'not found';
-    }
+    return this.appService.getReportOrType(param);
   }
 
   @Post("/new")
-  postReport(@Body() data: {name : string, type :  ReportType, amount: number}): Report[] {
-    let report = { 
-      name : data.name, 
-      type : data.type, 
-      id: generateRandomId() || randomUUID(),
-      createDate: new Date(),
-      amount: data.amount  
-    };
-    reports.push(report);
-    return reports;
+  postReport(@Body() data: {name : string, type : ReportType, amount: number}): Report[] {
+    return this.appService.postReport(data);
   }
 
   @Put("/:id")
   putReport(@Param('id') id: string, 
-            @Body() data: {name : string, type :  ReportType, amount: number}): Report[] {
-    return reports.map(report => {
-      if(report.id === id){
-        report.name = data.name;
-        report.type = data.type, 
-        report.amount = data.amount;
-        report.updateDate = new Date();
-      }
-      return report})
+            @Body() data: {name : string, type : ReportType, amount: number}): Report[] {
+    return this.appService.putReport(id, data);
   }
 
   @HttpCode(204)
   @Delete("/:id")
   deleteReport(@Param('id') id: string) {
-    const index = reports.findIndex(report => report.id === id);
-    
-    if (index !== -1) {
-      reports.splice(index, 1);
-    }
-    
-    return;
+    return this.appService.deleteReport(id);
   }
 
 }
