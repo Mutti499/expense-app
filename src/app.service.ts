@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { reports, generateRandomId, ReportType, Report } from "./data";
-
+import { responseReportDto } from './dtos/report.dto';
 
 interface createReport {
   name : string;
@@ -17,17 +17,15 @@ interface updateReport {
 @Injectable()
 export class AppService {
   getAllReports(): Report[] {
-    return reports;
+    return reports.map(report => new responseReportDto(report));
   }
-
-
   getWithType(type: ReportType) {
-    return reports.filter(report => report.type === type);
+    return (reports.filter(report => report.type === type).map(report => new responseReportDto(report)));
   }
 
   getWithID(id: string) {
     const report = reports.find(report => id === report.id);
-    return report ? report : 'not found';
+    return report ? new responseReportDto(report) : 'not found';
   }
 
   createReport(data : createReport){
@@ -39,15 +37,15 @@ export class AppService {
       amount: data.amount  
     };
     reports.push(report);
-    return reports;
+    return reports.map(report => new responseReportDto(report));
   }
 
   putReport(id: string, data: updateReport){
     return reports.map(report => {
       if(report.id === id){
-        return {...report, ...data}
+        return new responseReportDto({...report, ...data, updateDate: new Date()})
       }
-      return report})
+      return new responseReportDto(report);})
   }  
 
   deleteReport(id: string) {
